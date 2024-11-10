@@ -1,0 +1,101 @@
+import numpy as np
+from scipy.optimize import fsolve
+
+# Bond Pricing Function
+def bond_price(face_value, coupon_rate, periods, discount_rate):
+    """
+    Calculate the price of a bond.
+
+    Parameters:
+    - face_value: Par value of the bond (usually 1000)
+    - coupon_rate: Annual coupon rate (as a decimal, e.g., 5% -> 0.05)
+    - periods: Total number of periods (years x number of payments per year)
+    - discount_rate: The market discount rate (yield per period, as a decimal)
+    """
+    coupon = face_value * coupon_rate
+    price = 0
+    for t in range(1, periods + 1):
+        price += coupon / (1 + discount_rate)**t
+    price += face_value / (1 + discount_rate)**periods  # Add the face value discounted at the final period
+    return price
+
+# Yield to Maturity (YTM) Calculation using fsolve
+def ytm(face_value, coupon_rate, periods, market_price):
+    """
+    Calculate the Yield to Maturity (YTM) of a bond using numerical solving.
+    
+    Parameters:
+    - face_value: Par value of the bond
+    - coupon_rate: Annual coupon rate (decimal form)
+    - periods: Total number of periods (years x payments per year)
+    - market_price: The current market price of the bond
+    """
+    def price_error(ytm_guess):
+        return bond_price(face_value, coupon_rate, periods, ytm_guess) - market_price
+    
+    # Use fsolve to find the YTM that zeroes out the price error
+    return fsolve(price_error, 0.05)[0]
+
+# Current Yield Calculation
+def current_yield(face_value, coupon_rate, market_price):
+    """
+    Calculate the Current Yield of a bond.
+    
+    Parameters:
+    - face_value: Par value of the bond
+    - coupon_rate: Annual coupon rate (decimal form)
+    - market_price: The current market price of the bond
+    """
+    coupon = face_value * coupon_rate
+    return coupon / market_price
+
+# Duration Calculation (Modified Duration)
+def bond_duration(face_value, coupon_rate, periods, discount_rate):
+    """
+    Calculate the modified duration of the bond.
+    
+    Parameters:
+    - face_value: Par value of the bond
+    - coupon_rate: Annual coupon rate (decimal form)
+    - periods: Total number of periods (years x payments per year)
+    - discount_rate: Yield to maturity or market discount rate (decimal form)
+    """
+    coupon = face_value * coupon_rate
+    duration = 0
+    for t in range(1, periods + 1):
+        duration += t * coupon / (1 + discount_rate)**t
+    duration += periods * face_value / (1 + discount_rate)**periods
+    price = bond_price(face_value, coupon_rate, periods, discount_rate)
+    return duration / price
+
+# Example Values (Government Bond)
+face_value = 1000  # The face value of the bond (e.g., 1000 USD)
+coupon_rate = 0.05  # Annual coupon rate (5%)
+years = 10  # Bond maturity in years
+market_price = 950  # Current market price of the bond (e.g., 950 USD)
+periods = years  # Assuming annual coupon payments for simplicity
+discount_rate = 0.04  # Market discount rate (e.g., 4%)
+
+# 1. Calculate Bond Price (Example with 4% discount rate)
+price = bond_price(face_value, coupon_rate, periods, discount_rate)
+print(f"Bond Price: ${price:.2f}")
+
+# 2. Calculate Yield to Maturity (YTM) based on the market price
+calculated_ytm = ytm(face_value, coupon_rate, periods, market_price)
+print(f"Yield to Maturity (YTM): {calculated_ytm * 100:.2f}%")
+
+# 3. Calculate Current Yield
+current_yield_value = current_yield(face_value, coupon_rate, market_price)
+print(f"Current Yield: {current_yield_value * 100:.2f}%")
+
+# 4. Calculate Duration (Interest Rate Sensitivity)
+modified_duration = bond_duration(face_value, coupon_rate, periods, calculated_ytm)
+print(f"Modified Duration: {modified_duration:.2f} years")
+
+# Sensitivity: Bond Price change for a 1% change in interest rate
+price_with_plus_1_percent = bond_price(face_value, coupon_rate, periods, discount_rate + 0.01)
+price_with_minus_1_percent = bond_price(face_value, coupon_rate, periods, discount_rate - 0.01)
+
+price_change = (price_with_minus_1_percent - price_with_plus_1_percent) / 2
+interest_rate_sensitivity = price_change / price
+print(f"Price Sensitivity to Interest Rate Change: {interest_rate_sensitivity * 100:.2f}% per 1% change in interest rates")
