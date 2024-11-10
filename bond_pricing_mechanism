@@ -1,0 +1,50 @@
+# Function to calculate bond price
+def bond_price(face_value, coupon_rate, discount_rate, years_to_maturity, payment_frequency="annual"):
+    """
+    Calculate the price of a bond.
+
+    Parameters:
+    face_value (float): The bond's face value (typically 1000).
+    coupon_rate (float): The bond's annual coupon rate as a decimal (e.g., 0.06 for 6%).
+    discount_rate (float): The market's discount rate (or required rate of return) as a decimal (e.g., 0.05 for 5%).
+    years_to_maturity (int): The number of years until the bond matures.
+    payment_frequency (str): The frequency of coupon payments ("annual" or "semi-annual").
+    
+    Returns:
+    float: The price of the bond.
+    """
+    if payment_frequency == "semi-annual":
+        # Semi-annual bond adjustments
+        periods = years_to_maturity * 2
+        coupon_payment = face_value * coupon_rate / 2  # Semi-annual coupon
+        discount_rate = discount_rate / 2  # Semi-annual discount rate
+    else:
+        # Annual bond adjustments
+        periods = years_to_maturity
+        coupon_payment = face_value * coupon_rate  # Annual coupon
+        # discount_rate is already annual for annual payments
+    
+    # Calculate the present value of the coupon payments
+    coupon_pv = sum([coupon_payment / (1 + discount_rate) ** t for t in range(1, periods + 1)])
+    
+    # Calculate the present value of the face value (lump sum at maturity)
+    face_value_pv = face_value / (1 + discount_rate) ** periods
+    
+    # Total price of the bond is the sum of the present values of the coupon payments and face value
+    bond_price = coupon_pv + face_value_pv
+    return bond_price
+
+# Example usage:
+# Given values
+face_value = 1000  # Face value of the bond (e.g., $1,000)
+coupon_rate = 0.06  # Annual coupon rate of 6%
+discount_rate = 0.05  # Market discount rate of 5%
+years_to_maturity = 5  # The bond matures in 5 years
+
+# Calculate bond price for an annual bond
+price_annual = bond_price(face_value, coupon_rate, discount_rate, years_to_maturity, payment_frequency="annual")
+print(f"Bond Price (Annual Payments): ${price_annual:.2f}")
+
+# Calculate bond price for a semi-annual bond
+price_semi_annual = bond_price(face_value, coupon_rate, discount_rate, years_to_maturity, payment_frequency="semi-annual")
+print(f"Bond Price (Semi-Annual Payments): ${price_semi_annual:.2f}")
